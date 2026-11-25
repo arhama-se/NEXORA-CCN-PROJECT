@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexora - Track my report</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ===== Theme: dark navy & cyan ===== */
+  :root { --bg: #030a16; --text: #ffffff; --muted: #9db4c8; --cyan: #22d3ee; --line: rgba(56,189,248,0.28); }
+  html, body { min-height: 100%; }
+  body { background: var(--bg); background-image: none; color: var(--text); overflow-x: hidden; }
+
+  /* ===== background: dark navy with soft cyan waves ===== */
+  .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+        background: radial-gradient(ellipse at 0% 0%, rgba(6,182,212,0.55), transparent 32%),
+                    radial-gradient(ellipse at 100% 100%, rgba(37,99,235,0.45), transparent 35%),
+                    linear-gradient(160deg, #05203a 0%, #030a16 45%, #041026 100%); }
+  .wave { position: absolute; border-radius: 50%; }
+  .w1 { width: 1100px; height: 700px; left: -520px; top: -260px; background: radial-gradient(ellipse, rgba(34,211,238,0.22), transparent 65%); animation: float 14s ease-in-out infinite alternate; }
+  .w3 { width: 900px; height: 600px; right: -300px; bottom: -380px; background: radial-gradient(ellipse, rgba(37,99,235,0.35), transparent 65%); animation: float 16s ease-in-out infinite alternate; }
+  @keyframes float { to { transform: translate(40px, 30px) scale(1.05); } }
+  .bg .photo { position: absolute; inset: 0;
+               background-image: url("home-bg.png"), url("home-bg.jpg"), url("home-bg.jpeg"), url("home-bg.webp"), url("login-bg.webp");
+               background-size: cover; background-position: center; opacity: 0.22;
+               -webkit-mask-image: linear-gradient(180deg, black 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+                       mask-image: linear-gradient(180deg, black 0%, rgba(0,0,0,0.5) 60%, transparent 100%); }
+  .gridbg { position: absolute; inset: 0; background-size: 46px 46px;
+            background-image: linear-gradient(rgba(56,189,248,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.05) 1px, transparent 1px); }
+
+  body { min-height: 100vh; display: grid; place-items: center; }
+  .page { width: 100%; max-width: 1800px; margin: 0 auto; padding: 16px 40px 24px; }
+
+  /* ===== floating top bar ===== */
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-radius: 20px;
+         background: rgba(7,26,44,0.6); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+  .brand { display: flex; align-items: center; gap: 18px; color: #fff; }
+  .brand-icon { width: 58px; height: 58px; border-radius: 14px; display: grid; place-items: center; font-size: 30px;
+                background: linear-gradient(135deg, #ff5a5a, #dc2626); box-shadow: 0 0 24px rgba(239,68,68,0.5); animation: siren 2.4s ease-in-out infinite; }
+  @keyframes siren { 50% { box-shadow: 0 0 36px rgba(239,68,68,0.85); } }
+  .brand b { display: block; font-size: 25px; font-weight: 800; letter-spacing: 0.5px; }
+  .brand small { display: block; font-size: 14px; color: #dbe7f2; }
+  .bar-right { display: flex; gap: 14px; align-items: center; }
+  .pill-btn { display: inline-flex; align-items: center; gap: 10px; padding: 11px 20px; border-radius: 999px; font-size: 16px; font-weight: 600; color: #fff;
+              background: rgba(3,10,22,0.5); border: 1px solid var(--line); transition: border-color 0.2s, box-shadow 0.2s; }
+  a.pill-btn:hover { border-color: var(--cyan); box-shadow: 0 0 18px rgba(34,211,238,0.3); }
+  .online-dot { width: 12px; height: 12px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+
+  .back-row { display: flex; justify-content: center; margin-top: 26px; }
+  .back-btn { padding: 13px 30px; font-size: 17px; }
+  .back-btn:hover { transform: translateY(-2px); }
+
+  /* ===== top row ===== */
+  .top { display: grid; grid-template-columns: 1fr 1.05fr; gap: 50px; align-items: center; margin-bottom: 34px; }
+  .feats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .feats span { padding: 8px 14px; border-radius: 999px; font-size: 15px; font-weight: 600; color: #cfe3ef;
+                background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.25); }
+  .search-box { padding: 26px 28px; border-radius: 26px; background: linear-gradient(180deg, rgba(10,40,70,0.55), rgba(5,20,40,0.6));
+                border: 1.5px solid rgba(34,211,238,0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: rise 0.4s ease both 0.05s; }
+  .s-label { display: block; font-size: 15px; font-weight: 700; letter-spacing: 1.5px; color: var(--cyan); margin: 0 0 12px; }
+  .search-box .hint { text-align: left; margin: 14px 0 0; }
+  .search-box .error { margin: 14px 0 0; max-width: none; }
+
+  /* empty state (before tracking) */
+  .empty { display: flex; align-items: center; gap: 30px; padding: 34px 40px; border-radius: 28px; min-height: 260px;
+           background: rgba(7,26,44,0.35); border: 1.5px dashed rgba(34,211,238,0.35); animation: rise 0.4s ease both 0.1s; }
+  .e-icon { width: 96px; height: 96px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-size: 44px;
+            background: radial-gradient(circle, rgba(34,211,238,0.2), rgba(7,26,44,0.6)); border: 1.5px solid rgba(34,211,238,0.5);
+            animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 14px rgba(34,211,238,0.08); } }
+  .e-text { flex: 0 0 340px; }
+  .e-text b { display: block; font-size: 24px; margin-bottom: 6px; }
+  .e-text span { color: var(--muted); font-size: 17px; }
+  .e-steps { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .e-steps div { text-align: center; font-size: 15px; font-weight: 600; color: #8aa3b8; }
+  .e-steps i { display: grid; place-items: center; width: 58px; height: 58px; margin: 0 auto 8px; border-radius: 50%; font-style: normal; font-size: 24px;
+               background: #0d1c2e; border: 2px dashed rgba(56,189,248,0.35); filter: grayscale(0.6); }
+  .e-steps em { flex: 1; height: 3px; margin-bottom: 26px; border-radius: 3px;
+                background: repeating-linear-gradient(90deg, rgba(56,189,248,0.4) 0 8px, transparent 8px 16px); animation: dash 1.2s linear infinite; background-size: 16px 3px; }
+  @keyframes dash { to { background-position: 16px 0; } }
+
+  /* ===== heading ===== */
+  .head { text-align: left; animation: rise 0.4s ease both; }
+  .pin { width: 94px; height: 94px; margin: 0 0 16px; border-radius: 20px; display: grid; place-items: center;
+         background: linear-gradient(160deg, rgba(34,211,238,0.25), rgba(7,26,44,0.9)); border: 1.5px solid rgba(34,211,238,0.75);
+         box-shadow: 0 0 30px rgba(34,211,238,0.45), inset 0 0 18px rgba(34,211,238,0.15); }
+  .pin svg { width: 54px; height: 54px; filter: drop-shadow(0 0 6px rgba(34,211,238,0.8)); }
+  .head h1 { font-size: clamp(40px, 3.9vw, 66px); font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 8px; }
+  .head h1 span { color: var(--cyan); text-shadow: 0 0 24px rgba(34,211,238,0.35); }
+  .head p { font-size: clamp(16px, 1.35vw, 23px); color: #dbe7f2; }
+
+  /* ===== search bar ===== */
+  .search { display: flex; gap: 14px; align-items: center; }
+  .field { position: relative; flex: 1; }
+  .field svg { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; pointer-events: none; }
+  .field input { height: 62px; padding: 0 20px 0 76px; border-radius: 16px; font-size: 22px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+                 background: rgba(3,10,22,0.7); color: #fff; border: 1px solid rgba(56,189,248,0.15); }
+  .field input::placeholder { color: #6f8aa2; text-transform: none; font-weight: 500; }
+  .field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.15); }
+  .btn-track { height: 62px; min-width: 170px; padding: 0 30px; border-radius: 16px; border: none; cursor: pointer; flex-shrink: 0;
+               display: inline-flex; align-items: center; justify-content: center; gap: 14px; font-size: 22px; font-weight: 700; font-family: inherit; color: #fff;
+               background: linear-gradient(90deg, #22d3ee, #0ea5e9); box-shadow: 0 8px 26px rgba(34,211,238,0.45); transition: transform 0.2s, box-shadow 0.2s; }
+  .btn-track:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(34,211,238,0.6); }
+  .btn-track svg { width: 26px; height: 26px; }
+  .error { max-width: 1125px; margin: -20px auto 24px; }
+  .hint { text-align: center; color: var(--muted); font-size: 15px; margin-top: -18px; }
+  .hint b { color: #fff; }
+
+  /* ===== result: two cards side by side ===== */
+  .row { display: none; grid-template-columns: 1.05fr 0.5fr; gap: 28px; animation: rise 0.45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .card2 { border-radius: 28px; padding: 30px 40px; background: linear-gradient(180deg, rgba(10,40,70,0.55), rgba(5,20,40,0.6));
+           border: 1.5px solid rgba(34,211,238,0.4);
+           backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+  .r-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+  .r-top small { display: block; font-size: 17px; font-weight: 700; color: #dbe7f2; letter-spacing: 0.5px; }
+  .r-top h2 { font-size: 40px; font-weight: 800; letter-spacing: 2px; line-height: 1.2; }
+  .status { display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; border-radius: 999px; font-size: 19px; font-weight: 700; text-transform: capitalize; white-space: nowrap; }
+  .status::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+  .status.reported, .status.assigned { color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.4); }
+  .status.in_progress { color: var(--cyan); background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.45); }
+  .status.resolved { color: #4ade80; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.45); }
+
+  .chips { display: grid; grid-template-columns: 0.9fr 1.2fr 1.1fr; gap: 24px; margin-bottom: 30px; }
+  .chip { padding: 16px 20px; border-radius: 16px; background: rgba(3,10,22,0.45); border: 1px solid rgba(56,189,248,0.22); }
+  .chip small { display: block; font-size: 16px; font-weight: 700; letter-spacing: 0.5px; color: #cfe3ef; margin-bottom: 6px; }
+  .chip div { display: flex; align-items: center; gap: 12px; font-size: 19px; line-height: 1.25; }
+  .chip .i { font-size: 24px; flex-shrink: 0; }
+
+  .stepper { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); }
+  .rail, .fill { position: absolute; top: 34px; left: 12.5%; height: 4px; border-radius: 4px; }
+  .rail { right: 12.5%; background: rgba(56,189,248,0.18); }
+  .fill { width: 0; background: linear-gradient(90deg, #22c55e, #4ade80); box-shadow: 0 0 12px rgba(34,197,94,0.7); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
+  .s { text-align: center; position: relative; z-index: 1; }
+  .s .c { width: 68px; height: 68px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; font-size: 30px;
+          background: #1b2535; border: 3px solid #3a4658; filter: grayscale(1); transition: all 0.4s; }
+  .s.done .c { filter: none; background: radial-gradient(circle, #16a34a, #14532d); border-color: #22c55e; box-shadow: 0 0 18px rgba(34,197,94,0.55); }
+  .s.current .c { filter: none; background: radial-gradient(circle, #0e7490, #062a3d); border-color: var(--cyan); box-shadow: 0 0 0 8px rgba(34,211,238,0.15), 0 0 30px rgba(34,211,238,0.7); animation: glow 1.8s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 0 0 12px rgba(34,211,238,0.1), 0 0 40px rgba(34,211,238,0.9); } }
+  .s .l { font-size: 19px; font-weight: 600; color: #fff; }
+  .s:not(.done) .l { color: #dbe7f2; }
+
+  /* history card */
+  .h-title { display: flex; align-items: center; gap: 22px; font-size: 26px; font-weight: 800; margin-bottom: 22px; }
+  .h-title svg { width: 40px; height: 40px; }
+  .timeline { position: relative; padding-left: 58px; max-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(34,211,238,0.4) transparent; }   /* long history scrolls inside the card, page never scrolls */
+  .timeline::before { content: ""; position: absolute; left: 13px; top: 6px; bottom: 6px; width: 4px; border-radius: 4px; background: var(--cyan); box-shadow: 0 0 10px rgba(34,211,238,0.6); }
+  .event { position: relative; margin-bottom: 22px; animation: rise 0.4s ease both; }
+  .event:last-child { margin-bottom: 0; }
+  .event::before { content: ""; position: absolute; left: -58px; top: 2px; width: 22px; height: 22px; border-radius: 50%;
+                   background: #041a2e; border: 4px solid var(--cyan); box-shadow: 0 0 12px rgba(34,211,238,0.7); }
+  .event b { display: block; font-size: 19px; font-weight: 500; line-height: 1.3; }
+  /* the "Resolved" entry is highlighted in green */
+  .event.res { margin-left: -16px; padding: 12px 16px; border-radius: 14px;
+               background: linear-gradient(90deg, rgba(34,197,94,0.2), rgba(34,197,94,0.06));
+               border: 1px solid rgba(34,197,94,0.55); box-shadow: 0 0 18px rgba(34,197,94,0.2); }
+  .event.res::before { left: -42px; top: 14px; background: #22c55e; border-color: #22c55e; box-shadow: 0 0 14px #22c55e; }
+  .event.res b { color: #4ade80; font-weight: 700; }
+  .res-tag { display: inline-block; margin-bottom: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 800; letter-spacing: 1px;
+             color: #052e16; background: #4ade80; }
+  .event small { display: block; font-size: 18px; color: #b8cfdc; margin-top: 6px; }
+
+  @media (max-width: 1100px) {
+    .top { grid-template-columns: 1fr; gap: 24px; } .empty { flex-direction: column; text-align: center; } .e-text { flex: none; } .e-steps { width: 100%; }
+    .row { grid-template-columns: 1fr; }
+    .chips { grid-template-columns: 1fr; }
+    .brand small { display: none; }
+    .page { padding: 12px 16px 30px; }
+    .card2 { padding: 24px; }
+  }
+  @media (max-width: 640px) {
+    .search { flex-direction: column; align-items: stretch; }
+    .btn-track { width: 100%; }
+    .s .c { width: 50px; height: 50px; font-size: 22px; } .rail, .fill { top: 25px; } .s .l { font-size: 14px; }
+    .r-top { flex-direction: column; } .r-top h2 { font-size: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="photo"></div><div class="wave w1"></div><div class="wave w3"></div><div class="gridbg"></div></div>
+
+  <div class="page">
+    <!-- top row: heading (left) + search (right) -->
+    <div class="top">
+      <div class="head">
+        <div class="pin">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#22d3ee" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 40 C24 40 11 28 11 18.5 A13 13 0 0 1 37 18.5 C37 28 24 40 24 40 Z" fill="rgba(34,211,238,0.12)"/>
+            <circle cx="24" cy="18.5" r="4.5"/>
+            <path d="M14 38 C10 39 8 40.5 8 42 C8 44.5 15 46 24 46 C33 46 40 44.5 40 42 C40 40.5 38 39 34 38"/>
+          </svg>
+        </div>
+        <h1>Track my <span>report</span></h1>
+        <p>Enter your tracking ID to see who is handling your emergency.</p>
+        <div class="feats">
+          <span>⚡ Live updates</span><span>🔒 No personal data shown</span><span>📧 ID sent to your Gmail</span>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <label class="s-label">YOUR TRACKING ID</label>
+        <div class="search">
+          <div class="field">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/></svg>
+            <input id="tid" placeholder="e.g. NX-42K2G9" maxlength="9" autocomplete="off">
+          </div>
+          <button class="btn-track" id="go">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+            Track
+          </button>
+        </div>
+        <p class="hint">📧 Look for <b>"Nexora: your tracking ID is NX-…"</b> in Gmail (check Spam too).</p>
+        <div class="error" id="error"></div>
+      </div>
+    </div>
+
+    <!-- shown before tracking: what you will see -->
+    <div class="empty" id="empty">
+      <div class="e-icon">📡</div>
+      <div class="e-text"><b>Your report will appear here</b><span>Type your tracking ID above and press Track to see live progress and history.</span></div>
+      <div class="e-steps">
+        <div><i>📝</i>Reported</div><em></em><div><i>✅</i>Assigned</div><em></em><div><i>🚑</i>On the way</div><em></em><div><i>☑️</i>Resolved</div>
+      </div>
+    </div>
+
+    <!-- result -->
+    <div class="row" id="result">
+      <div class="card2">
+        <div class="r-top">
+          <div><small>TRACKING ID</small><h2 id="rId"></h2></div>
+          <span class="status" id="rStatus"></span>
+        </div>
+        <div class="chips">
+          <div class="chip"><small>EMERGENCY</small><div><span class="i" id="rIcon">⚠️</span><span id="rType" style="text-transform:capitalize"></span></div></div>
+          <div class="chip"><small>LOCATION</small><div><span class="i">📍</span><span id="rLoc"></span></div></div>
+          <div class="chip"><small>HANDLED BY</small><div><span class="i">🛡️</span><span id="rDept"></span></div></div>
+        </div>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card2">
+        <div class="h-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 7v5l3 2"/></svg>
+          History
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+
+    <!-- back button (bottom middle) -->
+    <div class="back-row"><a class="pill-btn back-btn" href="index.html">← Back to home</a></div>
+  </div>
+
+<script>
+const STEPS = [
+  ["reported", "Reported", "📝"],
+  ["assigned", "Assigned", "✅"],
+  ["in_progress", "On the way", "🚑"],
+  ["resolved", "Resolved", "☑️"],
+];
+const TYPE_ICON = { fire: "🔥", smoke: "💨", medical: "🩺", accident: "⚠️", traffic: "🚦" };
+let currentId = null;
+let lastShown = "";   // so the page only redraws when something changed
+
+// "2026-11-25 18:28:43" -> "25 Nov 2026, 6:28 PM"   (12-hour clock, Pakistan time)
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function when(t) {
+  const d = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(t || ""); if (!d) return t || "";
+  const h = +d[4];
+  return `${+d[3]} ${MONTHS[+d[2] - 1]} ${d[1]}, ${h % 12 || 12}:${d[5]} ${h < 12 ? "AM" : "PM"}`;
+}
+
+// Makes text safe to put inside the page
+function esc(text) {
+  const div = document.createElement("div");
+  div.textContent = text ?? "";
+  return div.innerHTML;
+}
+
+async function track(id) {
+  try {
+    const res = await fetch("/api/track/" + encodeURIComponent(id));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Not found");
+    document.getElementById("error").style.display = "none";
+    const snapshot = JSON.stringify(data);
+    if (snapshot !== lastShown) { lastShown = snapshot; show(data); }
+  } catch (e) {
+    document.getElementById("result").style.display = "none";
+    document.getElementById("empty").style.display = "flex";
+    lastShown = "";
+    const box = document.getElementById("error");
+    box.textContent = e.message === "Failed to fetch" ? "Cannot reach the server."
+      : e.message === "Tracking ID not found" ? "Tracking ID not found. Check the ID in your email. New reports can take up to a minute to appear."
+      : e.message;
+    box.style.display = "block";
+  }
+}
+
+function show(d) {
+  document.getElementById("result").style.display = "grid";
+  document.getElementById("empty").style.display = "none";
+  document.getElementById("rId").textContent = d.tracking_id;
+  document.getElementById("rIcon").textContent = TYPE_ICON[d.type] || "⚠️";
+  document.getElementById("rType").textContent = d.type;
+  document.getElementById("rLoc").textContent = d.location;
+  document.getElementById("rDept").textContent = d.department.split(",").join(" + ");
+  const status = document.getElementById("rStatus");
+  status.className = "status " + d.status;
+  status.textContent = d.status === "in_progress" ? "On The Way" : d.status;
+
+  const reached = STEPS.findIndex(s => s[0] === d.status);
+  document.getElementById("stepper").innerHTML =
+    `<div class="rail"></div><div class="fill" id="fill"></div>` +
+    STEPS.map((s, i) => `
+      <div class="s ${i < reached || d.status === "resolved" ? "done" : ""} ${i === reached && d.status !== "resolved" ? "current" : ""}">
+        <div class="c">${s[2]}</div>
+        <div class="l">${s[1]}</div>
+      </div>`).join("");
+  // grow the green line up to the current step
+  requestAnimationFrame(() => { document.getElementById("fill").style.width = (Math.max(reached, 0) / 3 * 75) + "%"; });
+
+  document.getElementById("timeline").innerHTML = d.updates.slice().reverse().map((u, i) => `
+    <div class="event ${u.status === "resolved" ? "res" : ""}" style="animation-delay:${i * 0.06}s">
+      ${u.status === "resolved" ? '<span class="res-tag">✔ RESOLVED</span>' : ""}
+      <b>${esc(u.note || u.status)}</b>
+      <small>${esc(when(u.created_at))}</small>
+    </div>`).join("");
+  fitScreen();
+}
+
+function start() {
+  const id = document.getElementById("tid").value.trim().toUpperCase();
+  if (!id) return;
+  currentId = id;
+  history.replaceState(null, "", "?id=" + id);
+  track(id);
+}
+
+document.getElementById("go").addEventListener("click", start);
+document.getElementById("tid").addEventListener("keydown", e => { if (e.key === "Enter") start(); });
+
+// If the page was opened as track.html?id=NX-..., track it straight away
+const fromLink = new URLSearchParams(location.search).get("id");
+if (fromLink) { document.getElementById("tid").value = fromLink; start(); }
+
+// Shrink or grow the whole page so it ALWAYS fits on one screen (no scrolling),
+// whatever the screen size, Windows zoom (100%, 125%, 150%...) or font.
+function fitScreen() {
+  const page = document.querySelector(".page");
+  page.style.zoom = 1;
+  if (window.innerWidth < 1100) return;                       // phones / small windows: normal scrolling layout
+  let needed = page.scrollHeight;                             // real height of everything on the page
+  if (document.getElementById("result").style.display !== "grid") needed += 120;   // the result is a bit taller than the empty box
+  const FAR = 0.8;    // 1 = fill the screen, smaller = more space around (like the login page)
+  page.style.zoom = FAR * Math.min(window.innerWidth / 1906, (window.innerHeight - 6) / needed, 1.3);
+}
+window.addEventListener("resize", fitScreen);
+fitScreen();
+if (document.fonts) document.fonts.ready.then(fitScreen);     // measure again once the font has loaded
+
+// Quietly refresh every 5 seconds so the citizen sees updates
+setInterval(() => { if (currentId) track(currentId); }, 5000);
+</script>
+</body>
+</html>

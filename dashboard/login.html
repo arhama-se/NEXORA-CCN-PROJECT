@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexora - Staff login</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Every size inside the card is in "cqw" = 1% of the card width,
+     so the page keeps the SAME proportions as the reference picture on every screen. */
+  html, body { height: 100%; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; overflow: hidden;
+         background: #030a16; background-image: none; color: #e6f6ff;
+         }
+
+  /* ===== blurred picture behind the card (trees still visible, blue tone) ===== */
+  /* the picture, zoomed on the trees and softly blurred so the tree shadows show through */
+  .bg-blur { position: fixed; inset: -40px; z-index: -3; background: url("login-bg.webp") center 75% / cover, #030a16;
+             filter: blur(10px) hue-rotate(-12deg) saturate(0.85) brightness(0.65); transform: scale(1.25); }
+  /* dark navy tone (less blue) with a soft cyan glow on the left, like the reference */
+  .bg-tint { position: fixed; inset: 0; z-index: -2;
+             background: radial-gradient(ellipse at 0% 0%, rgba(6,182,212,0.30), transparent 45%),
+                         radial-gradient(ellipse at 100% 100%, rgba(37,99,235,0.22), transparent 45%),
+                         linear-gradient(180deg, rgba(3,10,22,0.45), rgba(3,10,22,0.6)); }
+
+  /* ===== the card (71% of the screen width, same shape as the reference) ===== */
+  .frame {
+    container-type: inline-size; position: relative;
+    width: min(78vw, 140vh); aspect-ratio: 1037 / 504;
+    border-radius: 1.8cqw; border: 1px solid rgba(34,211,238,0.45);
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.08), 0 0 22px rgba(34,211,238,0.30), 0 0 60px rgba(6,182,212,0.15), 0 30px 70px rgba(0,0,0,0.5);
+    animation: rise 0.35s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .photo-wrap { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+  .photo { position: absolute; inset: 0; background: url("login-bg.webp") center / cover, linear-gradient(135deg, #062a3d, #071a2c);
+           filter: hue-rotate(-12deg) saturate(0.9); animation: zoom 30s ease-in-out infinite alternate; }
+  @keyframes zoom { from { transform: scale(1); } to { transform: scale(1.03); } }
+  /* light blue glass haze on the left, like the reference */
+  .shade { position: absolute; inset: 0;
+           background: linear-gradient(90deg, rgba(3,22,38,0.72) 0%, rgba(4,30,48,0.42) 35%, rgba(3,10,22,0.08) 60%, rgba(3,10,22,0.25) 100%); }
+  @keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+  /* ===== NEXORA brand (top left) - click to go home ===== */
+  .brand { position: absolute; left: 5.1cqw; top: 2.9cqw; display: flex; align-items: center; gap: 1.45cqw; z-index: 3; color: #fff; }
+  .brand-icon { width: 4.05cqw; height: 4.05cqw; border-radius: 1cqw; display: grid; place-items: center; font-size: 2.1cqw;
+                background: linear-gradient(135deg, #ff6b6b, #ef3b3b); box-shadow: 0 0 1.6cqw rgba(255,70,70,0.55); transition: transform 0.2s; }
+  .brand:hover .brand-icon { transform: scale(1.06); }
+  .brand b { display: block; font-size: 1.55cqw; font-weight: 700; letter-spacing: 0.03cqw; line-height: 1.2; }
+  .brand small { display: block; font-size: 0.9cqw; font-weight: 500; color: #eaf2ff; margin-top: 0.3cqw; }
+
+  /* ===== left text ===== */
+  .hero-text { position: absolute; left: 9.2cqw; top: 17.2cqw; z-index: 2; animation: rise 0.4s ease both 0.05s; }
+  .live { display: inline-flex; align-items: center; gap: 0.6cqw; padding: 0.35cqw 0.85cqw; border-radius: 99px; font-size: 0.95cqw; font-weight: 600;
+          background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.35); color: #67e8f9; margin-bottom: 1.4cqw; }
+  .live .dot { width: 0.7cqw; height: 0.7cqw; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0.6cqw #22c55e; }
+  .hero-text h2 { font-size: 4.05cqw; line-height: 1.17; font-weight: 700; letter-spacing: -0.03cqw; margin: 0 0 1.5cqw; }
+  .hero-text h2 span { background: linear-gradient(90deg, #22d3ee, #67e8f9, #22d3ee); background-size: 200% auto;
+                       -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 5s linear infinite; }
+  @keyframes shine { to { background-position: 200% center; } }
+  .hero-text p { font-size: 1.32cqw; line-height: 1.5; color: #cfe3ef; max-width: 23cqw; margin: 0; }
+
+  /* ===== login box (right side) ===== */
+  .login {
+    position: absolute; right: 5.2cqw; top: 10.4cqw; width: 28.9cqw; height: 33.5cqw; z-index: 4;
+    padding: 1.7cqw 2.3cqw 2cqw; border-radius: 1.6cqw; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: center;
+    background: linear-gradient(180deg, rgba(7,26,44,0.62), rgba(3,10,22,0.62));
+    border: 1px solid rgba(34,211,238,0.4);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 1.8cqw rgba(34,211,238,0.22), inset 0 0 1.5cqw rgba(34,211,238,0.05);
+    animation: rise 0.4s ease both 0.08s;
+  }
+  .shield { display: block; margin: 0 auto 0.2cqw; width: 4.2cqw; height: 4.5cqw; filter: drop-shadow(0 0 0.6cqw rgba(34,211,238,0.7)); }
+  .login h1 { text-align: center; font-size: 2cqw; font-weight: 700; margin: 0; line-height: 1.25; }
+  .login .sub { text-align: center; font-size: 0.97cqw; color: #86a3b8; margin: 0.4cqw 0 1cqw; }
+  .login label { display: block; color: #fff; font-size: 0.97cqw; font-weight: 700; margin: 1.1cqw 0 0.55cqw; }
+
+  /* fields */
+  .field { position: relative; }
+  .field .ico { position: absolute; left: 1.1cqw; top: 50%; transform: translateY(-50%); font-size: 1.35cqw; pointer-events: none; }
+  .field input { width: 100%; box-sizing: border-box; height: 3.2cqw; padding: 0 3.5cqw 0 3.6cqw; border-radius: 0.8cqw; font-size: 1.07cqw;
+                 font-family: inherit; background: rgba(255,255,255,0.05); color: #e6f6ff; border: 1px solid rgba(56,189,248,0.2); }
+  .field input::placeholder { color: #86a3b8; }
+  .field input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 0.25cqw rgba(34,211,238,0.2); }
+  input:-webkit-autofill { -webkit-text-fill-color: #fff; -webkit-box-shadow: 0 0 0 1000px #071a2c inset; }
+  .eye { position: absolute; right: 0.9cqw; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 0.3cqw; display: grid; }
+  .eye svg { width: 1.6cqw; height: 1.6cqw; }
+
+  /* role drop-down */
+  .select { position: relative; }
+  .select-btn { width: 100%; height: 3.2cqw; display: flex; align-items: center; gap: 0.9cqw; padding: 0 1.1cqw; border-radius: 0.8cqw; cursor: pointer;
+                background: rgba(255,255,255,0.05); color: #e6f6ff; border: 1px solid rgba(56,189,248,0.2); font-size: 1.07cqw; font-family: inherit; text-align: left;
+                transition: border 0.2s, box-shadow 0.2s; }
+  .select-btn:hover { border-color: rgba(34,211,238,0.5); }
+  .select-btn:focus, .select.open .select-btn { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 0.25cqw rgba(34,211,238,0.2); }
+  .avatar { width: 1.7cqw; height: 1.7cqw; border-radius: 50%; display: grid; place-items: center; font-size: 1cqw; flex-shrink: 0;
+            background: linear-gradient(135deg, #a855f7, #7c3aed); }
+  .avatar svg { width: 1cqw; height: 1cqw; }
+  .select-btn .placeholder { color: #86a3b8; }
+  .chev { margin-left: auto; width: 1.4cqw; height: 1.4cqw; transition: transform 0.25s; }
+  .select.open .chev { transform: rotate(180deg); }
+  .options { position: absolute; left: 0; right: 0; top: calc(100% + 0.4cqw); z-index: 20; list-style: none; margin: 0; padding: 0.4cqw; border-radius: 0.9cqw;
+             background: #071a2c; border: 1px solid rgba(34,211,238,0.4); box-shadow: 0 1.5cqw 3cqw rgba(0,0,0,0.5), 0 0 1.5cqw rgba(34,211,238,0.2);
+             opacity: 0; transform: translateY(-6px); pointer-events: none; transition: all 0.2s; overflow-y: auto; scrollbar-width: thin; }
+  .select.open .options { opacity: 1; transform: none; pointer-events: auto; }
+  .options li { display: flex; align-items: center; gap: 0.8cqw; padding: 0.38cqw 0.8cqw; line-height: 1.4; border-radius: 0.6cqw; cursor: pointer; transition: background 0.15s; }
+  .options li:hover, .options li.focus { background: rgba(34,211,238,0.15); }
+  .options li.chosen { background: rgba(34,211,238,0.24); }
+  .options .emoji { font-size: 1.15cqw; width: 1.8cqw; text-align: center; }
+  .options li > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8cqw; flex: 1; }
+  .options b { font-size: 1.07cqw; font-weight: 600; }
+  .options small { color: #86a3b8; font-size: 0.85cqw; white-space: nowrap; }
+
+  /* button */
+  .btn-login { width: 100%; height: 3.6cqw; margin-top: 1.25cqw; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5cqw;
+               font-size: 1.25cqw; font-weight: 700; font-family: inherit; border-radius: 0.9cqw; color: #fff;
+               background: linear-gradient(90deg, #22d3ee, #0891b2); box-shadow: 0 0.5cqw 1.8cqw rgba(34,211,238,0.35);
+               transition: transform 0.2s, box-shadow 0.2s; }
+  .btn-login:hover { transform: translateY(-2px); box-shadow: 0 0.8cqw 2.2cqw rgba(34,211,238,0.5); }
+  .btn-login .arrow { transition: transform 0.25s; }
+  .btn-login:hover .arrow { transform: translateX(4px); }
+  .spin { display: none; width: 1.2cqw; height: 1.2cqw; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .btn-login.loading .spin { display: inline-block; }
+  .btn-login.loading .arrow { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .secure { display: flex; align-items: center; gap: 1cqw; margin-top: 1.6cqw; font-size: 0.92cqw; color: #86a3b8; }
+  .secure::before, .secure::after { content: ""; flex: 1; height: 1px; background: rgba(56,189,248,0.2); }
+  .error { display: none; margin-top: 0.8cqw; font-size: 1cqw; padding: 0.6cqw 0.9cqw; border-radius: 0.6cqw;
+           background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fecaca; }
+  .shake { animation: shake 0.4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+  /* phones / small windows: card fills the width, login box under the logo */
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .frame { width: 94vw; aspect-ratio: auto; min-height: 150cqw; }
+    .hero-text { display: none; }
+    .brand { left: 5cqw; top: 5cqw; gap: 3cqw; }
+    .brand-icon { width: 10cqw; height: 10cqw; font-size: 5cqw; border-radius: 2.5cqw; }
+    .brand b { font-size: 4.5cqw; } .brand small { font-size: 2.4cqw; }
+    .login { left: 5cqw; right: 5cqw; top: 22cqw; width: auto; height: auto; padding: 6cqw; border-radius: 4cqw; }
+    .shield { width: 10cqw; height: 11cqw; } .login h1 { font-size: 6cqw; } .login .sub { font-size: 3cqw; }
+    .login label { font-size: 3.2cqw; margin: 4cqw 0 2cqw; }
+    .field input, .select-btn { height: 11cqw; font-size: 3.6cqw; border-radius: 2.5cqw; }
+    .field input { padding: 0 11cqw; } .field .ico { font-size: 4.5cqw; left: 3.5cqw; }
+    .avatar { width: 6cqw; height: 6cqw; } .avatar svg { width: 3.5cqw; height: 3.5cqw; } .chev { width: 4.5cqw; height: 4.5cqw; }
+    .eye svg { width: 5cqw; height: 5cqw; }
+    .options b { font-size: 3.6cqw; } .options small { font-size: 2.8cqw; } .options .emoji { font-size: 4.5cqw; width: 6cqw; }
+    .options li { padding: 2cqw 3cqw; }
+    .btn-login { height: 12cqw; font-size: 4.2cqw; border-radius: 3cqw; margin-top: 5cqw; }
+    .secure { font-size: 3cqw; margin-top: 5cqw; } .error { font-size: 3.2cqw; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+</style>
+</head>
+<body>
+  <div class="bg-blur"></div>
+  <div class="bg-tint"></div>
+
+  <div class="frame">
+    <div class="photo-wrap"><div class="photo"></div><div class="shade"></div></div>
+
+    <!-- NEXORA brand (click it to go back to the home page) -->
+    <a class="brand" href="index.html" title="Back to home">
+      <div class="brand-icon">🚨</div>
+      <div><b>NEXORA</b><small>Smart City Emergency Communication and Network Management System</small></div>
+    </a>
+
+    <!-- left text -->
+    <div class="hero-text">
+      <div class="live"><span class="dot"></span> System online</div>
+      <h2>Welcome Back<br>to <span>NEXORA</span></h2>
+      <p>Sign in to access your dashboard and manage emergency operations.</p>
+    </div>
+
+    <!-- login box -->
+    <div class="login" id="card">
+      <svg class="shield" viewBox="0 0 48 52" fill="none" stroke="#22d3ee" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M24 3 L42 9.5 V24 C42 36 34 44 24 49 C14 44 6 36 6 24 V9.5 Z" fill="rgba(34,211,238,0.10)"/>
+        <path d="M13 27 H19 L22 19 L26 34 L29 27 H35"/>
+      </svg>
+      <h1>Login</h1>
+      <p class="sub">Staff of departments and the Command Center</p>
+
+      <label>Role</label>
+      <div class="select" id="select">
+        <button class="select-btn" id="selectBtn" type="button" aria-haspopup="listbox">
+          <span class="avatar" id="selEmoji"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4.5"/><path d="M3 22c0-5 4-8 9-8s9 3 9 8z"/></svg></span>
+          <span id="selText" class="placeholder">Select your role</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="options" id="options" role="listbox">
+          <li data-user="fire"><span class="emoji">🔥</span><div><b>Fire Department</b><small>Fire &amp; smoke</small></div></li>
+          <li data-user="hospital"><span class="emoji">🚑</span><div><b>City Hospital</b><small>Medical &amp; accidents</small></div></li>
+          <li data-user="police"><span class="emoji">🚓</span><div><b>Police Department</b><small>Accidents</small></div></li>
+          <li data-user="traffic"><span class="emoji">🚦</span><div><b>Traffic Control</b><small>Jams &amp; signals</small></div></li>
+          <li data-user="command"><span class="emoji">🛡️</span><div><b>Command Center</b><small>All departments</small></div></li>
+        </ul>
+      </div>
+
+      <label for="password">Password</label>
+      <div class="field">
+        <span class="ico">🔒</span>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password">
+        <button class="eye" id="eye" type="button" title="Show password"></button>
+      </div>
+
+      <div class="error" id="error"></div>
+      <button class="btn-login" id="login"><span class="spin"></span><span id="loginText">Login</span><span class="arrow">→</span></button>
+      <div class="secure">Secure Access</div>
+    </div>
+  </div>
+
+<script>
+let role = null;
+const select = document.getElementById("select");
+const items = [...document.querySelectorAll("#options li")];
+
+// ---------- role drop-down ----------
+function openList(open) {
+  if (open) {
+    // always open below and stay INSIDE the login box (the list scrolls if there is not enough room)
+    const btn = document.getElementById("selectBtn").getBoundingClientRect();
+    const box = document.getElementById("card").getBoundingClientRect();
+    document.getElementById("options").style.maxHeight = Math.max(120, box.bottom - btn.bottom - 14) + "px";
+  }
+  select.classList.toggle("open", open);
+}
+
+function pick(li) {
+  role = li.dataset.user;
+  items.forEach(x => x.classList.toggle("chosen", x === li));
+  const icon = document.getElementById("selEmoji");
+  icon.textContent = li.querySelector(".emoji").textContent;
+  icon.style.background = "rgba(34,211,238,0.2)";
+  const t = document.getElementById("selText");
+  t.textContent = li.querySelector("b").textContent;
+  t.classList.remove("placeholder");
+  openList(false);
+  document.getElementById("password").focus();
+}
+
+document.getElementById("selectBtn").addEventListener("click", () => openList(!select.classList.contains("open")));
+items.forEach(li => li.addEventListener("click", () => pick(li)));
+document.addEventListener("click", e => { if (!select.contains(e.target)) openList(false); });
+
+// keyboard: arrows to move, Enter to choose, Esc to close
+let focusIndex = -1;
+document.getElementById("selectBtn").addEventListener("keydown", e => {
+  if (!["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(e.key)) return;
+  e.preventDefault();
+  if (e.key === "Escape") return openList(false);
+  if (!select.classList.contains("open")) { openList(true); focusIndex = Math.max(0, items.findIndex(x => x.dataset.user === role)); }
+  else if (e.key === "ArrowDown") focusIndex = (focusIndex + 1) % items.length;
+  else if (e.key === "ArrowUp") focusIndex = (focusIndex - 1 + items.length) % items.length;
+  else if (e.key === "Enter" && focusIndex >= 0) return pick(items[focusIndex]);
+  items.forEach((x, i) => x.classList.toggle("focus", i === focusIndex));
+});
+
+// ---------- show / hide password (eye icon) ----------
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>';
+const EYE_ON  = '<svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const eye = document.getElementById("eye");
+eye.innerHTML = EYE_OFF;
+eye.addEventListener("click", () => {
+  const pw = document.getElementById("password");
+  pw.type = pw.type === "password" ? "text" : "password";
+  eye.innerHTML = pw.type === "password" ? EYE_OFF : EYE_ON;
+});
+
+// ---------- login ----------
+function fail(message) {
+  const box = document.getElementById("error");
+  box.textContent = message;
+  box.style.display = "block";
+  const card = document.getElementById("card");
+  card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+}
+
+async function login() {
+  document.getElementById("error").style.display = "none";
+  if (!role) return fail("Please select your role first.");
+  const btn = document.getElementById("login");
+  btn.classList.add("loading");
+  document.getElementById("loginText").textContent = "Signing in...";
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: role, password: document.getElementById("password").value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Login failed");
+    sessionStorage.setItem("token", data.token);   // each browser tab has its own login
+    document.getElementById("loginText").textContent = "✔ Welcome!";
+    setTimeout(() => location.href = "dashboard.html", 400);
+  } catch (e) {
+    btn.classList.remove("loading");
+    document.getElementById("loginText").textContent = "Login";
+    fail(e.message === "Failed to fetch" ? "Cannot reach the server." : e.message === "Wrong username or password" ? "Wrong password for this role." : e.message);
+  }
+}
+
+document.getElementById("login").addEventListener("click", login);
+document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+</script>
+</body>
+</html>

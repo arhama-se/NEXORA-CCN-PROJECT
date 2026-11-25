@@ -1,0 +1,13 @@
+! Not shown in running-config but active:
+interface vlan 20
+ ip access-group POLICE-IN in
+interface vlan 30
+ ip access-group HOSPITAL-IN in
+interface vlan 40
+ ip access-group FIRE-IN in
+interface vlan 50
+ ip access-group TRAFFIC-IN in
+interface vlan 60
+ ip access-group IOT-IN in
+interface fa0/6
+ service-policy input MARK-EMERGENCY

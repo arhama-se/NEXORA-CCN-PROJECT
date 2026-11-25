@@ -1,0 +1,5 @@
+backend/nexora.db
+backend/*.db
+__pycache__/
+*.pyc
+gform_url.txt
